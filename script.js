@@ -1,0 +1,1756 @@
+/* -----------------------------
+   Existing site functions
+------------------------------ */
+
+function copyIP() {
+  // Use your real IP/domain here
+  const ip = "btecanada.net";
+  navigator.clipboard.writeText(ip);
+  alert("Server IP copied to clipboard!");
+}
+
+function scrollStaff(direction) {
+  const carousel = document.getElementById("staffCarousel");
+  if (!carousel) return;
+
+  const scrollAmount = 280; // ~ 1 card + gap
+  carousel.scrollBy({ left: direction * scrollAmount, behavior: "smooth" });
+}
+
+function toggleNav() {
+  const menu = document.getElementById("navMenu");
+  const btn = document.querySelector(".nav-toggle");
+  if (!menu || !btn) return;
+
+  menu.classList.toggle("open");
+  const isOpen = menu.classList.contains("open");
+  btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+}
+
+function toggleMobileNav() {
+  const body = document.body;
+  const drawer = document.getElementById("mobileNavDrawer");
+  const backdrop = document.getElementById("mobileNavBackdrop");
+  const toggle = document.getElementById("mobileNavToggle");
+  if (!body || !drawer || !backdrop || !toggle) return;
+
+  const isOpen = body.classList.toggle("mobile-nav-open");
+  drawer.classList.toggle("open", isOpen);
+  drawer.setAttribute("aria-hidden", isOpen ? "false" : "true");
+  toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  backdrop.hidden = !isOpen;
+}
+
+function closeMobileNav() {
+  const body = document.body;
+  const drawer = document.getElementById("mobileNavDrawer");
+  const backdrop = document.getElementById("mobileNavBackdrop");
+  const toggle = document.getElementById("mobileNavToggle");
+  if (!body || !drawer || !backdrop || !toggle) return;
+
+  body.classList.remove("mobile-nav-open");
+  drawer.classList.remove("open");
+  drawer.setAttribute("aria-hidden", "true");
+  toggle.setAttribute("aria-expanded", "false");
+  backdrop.hidden = true;
+}
+
+function initMobileNavDrawer() {
+  const nav = document.querySelector(".nav");
+  const navRight = nav?.querySelector(".nav-right");
+  if (!nav || !navRight) return;
+
+  let toggle = document.getElementById("mobileNavToggle");
+  if (!toggle) {
+    toggle = document.createElement("button");
+    toggle.id = "mobileNavToggle";
+    toggle.className = "mobile-nav-toggle";
+    toggle.type = "button";
+    toggle.setAttribute("aria-label", "Open navigation menu");
+    toggle.setAttribute("aria-controls", "mobileNavDrawer");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    `;
+    navRight.appendChild(toggle);
+  }
+
+  let backdrop = document.getElementById("mobileNavBackdrop");
+  if (!backdrop) {
+    backdrop = document.createElement("button");
+    backdrop.id = "mobileNavBackdrop";
+    backdrop.className = "mobile-nav-backdrop";
+    backdrop.type = "button";
+    backdrop.hidden = true;
+    backdrop.setAttribute("aria-label", "Close navigation menu");
+    document.body.appendChild(backdrop);
+  }
+
+  let drawer = document.getElementById("mobileNavDrawer");
+  if (!drawer) {
+    drawer = document.createElement("aside");
+    drawer.id = "mobileNavDrawer";
+    drawer.className = "mobile-nav-drawer";
+    drawer.setAttribute("aria-hidden", "true");
+    drawer.innerHTML = `
+      <div class="mobile-nav-head">
+        <strong>Menu</strong>
+        <button type="button" class="mobile-nav-close" aria-label="Close navigation menu">×</button>
+      </div>
+      <nav class="mobile-nav-links" aria-label="Mobile">
+        <a href="index.html">Home</a>
+        <a href="showcase.html">Showcase</a>
+        <a href="visit.html">Visit</a>
+        <a href="build.html">Build</a>
+        <a href="docs.html">Docs</a>
+        <a href="map.html">Map</a>
+      </nav>
+      <div class="mobile-nav-socials" aria-label="Social links">
+        <a href="https://discord.gg/pnPSvpfhAs" target="_blank" rel="noopener">Discord</a>
+        <a href="https://www.instagram.com/bte.canada/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.tiktok.com/@btecanada" target="_blank" rel="noopener">TikTok</a>
+      </div>
+    `;
+    document.body.appendChild(drawer);
+  }
+
+  if (toggle.dataset.bound !== "1") {
+    toggle.addEventListener("click", toggleMobileNav);
+    toggle.dataset.bound = "1";
+  }
+  if (backdrop.dataset.bound !== "1") {
+    backdrop.addEventListener("click", closeMobileNav);
+    backdrop.dataset.bound = "1";
+  }
+  const closeBtn = drawer.querySelector(".mobile-nav-close");
+  if (closeBtn && closeBtn.dataset.bound !== "1") {
+    closeBtn.addEventListener("click", closeMobileNav);
+    closeBtn.dataset.bound = "1";
+  }
+  drawer.querySelectorAll("a").forEach((link) => {
+    if (link.dataset.bound === "1") return;
+    link.addEventListener("click", closeMobileNav);
+    link.dataset.bound = "1";
+  });
+
+  if (document.body.dataset.mobileNavInit !== "1") {
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeMobileNav();
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 980) closeMobileNav();
+    });
+    document.body.dataset.mobileNavInit = "1";
+  }
+}
+
+document.addEventListener("click", (e) => {
+  const menu = document.getElementById("navMenu");
+  const btn = document.querySelector(".nav-toggle");
+  if (!menu || !btn) return;
+
+  // Close menu after tapping a link
+  if (menu.classList.contains("open") && e.target.closest("#navMenu a")) {
+    menu.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  }
+});
+
+(function initTheme() {
+  const saved = localStorage.getItem("theme");
+  if (saved === "light") {
+    document.documentElement.removeAttribute("data-theme");
+  } else {
+    document.documentElement.setAttribute("data-theme", "dark");
+  }
+  updateThemeToggleLabel();
+})();
+
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  if (isDark) {
+    document.documentElement.removeAttribute("data-theme");
+    localStorage.setItem("theme", "light");
+  } else {
+    document.documentElement.setAttribute("data-theme", "dark");
+    localStorage.setItem("theme", "dark");
+  }
+  updateThemeToggleLabel();
+}
+
+function updateThemeToggleLabel() {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const label = isDark ? "Dark" : "Light";
+  const aria = isDark ? "Switch to light mode" : "Switch to dark mode";
+
+  document.querySelectorAll(".theme-btn").forEach((btn) => {
+    const textEl = btn.querySelector(".theme-label");
+    if (textEl) textEl.textContent = label;
+    btn.setAttribute("aria-label", aria);
+    btn.setAttribute("title", aria);
+  });
+
+  document.querySelectorAll(".nav-theme-toggle").forEach((btn) => {
+    btn.setAttribute("aria-label", aria);
+    btn.setAttribute("title", aria);
+  });
+}
+
+function toggleSettingsMenu(event) {
+  event.stopPropagation();
+  const wrap = event.currentTarget.closest(".settings-wrap");
+  if (!wrap) return;
+  const menu = wrap.querySelector(".settings-menu");
+  if (!menu) return;
+
+  const isOpen = menu.classList.contains("open");
+  document.querySelectorAll(".settings-menu.open").forEach((el) => {
+    el.classList.remove("open");
+    el.setAttribute("aria-hidden", "true");
+  });
+  document.querySelectorAll(".settings-btn[aria-expanded=\"true\"]").forEach((btn) => {
+    btn.setAttribute("aria-expanded", "false");
+  });
+
+  if (!isOpen) {
+    menu.classList.add("open");
+    menu.setAttribute("aria-hidden", "false");
+    event.currentTarget.setAttribute("aria-expanded", "true");
+  }
+}
+
+function initSettingsMenu() {
+  document.querySelectorAll(".settings-menu").forEach((menu) => {
+    menu.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  });
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".settings-menu.open").forEach((el) => {
+      el.classList.remove("open");
+      el.setAttribute("aria-hidden", "true");
+    });
+    document.querySelectorAll(".settings-btn[aria-expanded=\"true\"]").forEach((btn) => {
+      btn.setAttribute("aria-expanded", "false");
+    });
+  });
+}
+
+function createNavIcon(name) {
+  if (name === "instagram") {
+    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2C4.243 2 2 4.243 2 7v10c0 2.757 2.243 5 5 5h10c2.757 0 5-2.243 5-5V7c0-2.757-2.243-5-5-5H7zm10 2a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h10zm-5 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm4.75-.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5z"/></svg>`;
+  }
+  if (name === "tiktok") {
+    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 3a5.5 5.5 0 0 0 4 1.8V8a8.4 8.4 0 0 1-4-1.1v6.6a6.5 6.5 0 1 1-6.5-6.5c.3 0 .6 0 .9.1V10a3.5 3.5 0 1 0 2.6 3.4V3h3z"/></svg>`;
+  }
+  if (name === "theme") {
+    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3a7 7 0 0 0 11.5 11.5z"></path></svg>`;
+  }
+  if (name === "login") {
+    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h-6a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 12h11m-4-4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+  if (name === "logout") {
+    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12H4m4-4-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+  return "";
+}
+
+function initUnifiedNavbar() {
+  const nav = document.querySelector(".nav");
+  const navCenter = nav?.querySelector(".nav-center");
+  const navRight = nav?.querySelector(".nav-right");
+  if (!nav || !navRight) return;
+
+  if (navCenter && !navCenter.querySelector(".nav-more-wrap")) {
+    const docsLink = navCenter.querySelector('a[href="docs.html"]');
+    const docsHref = docsLink?.getAttribute("href") || "docs.html";
+    if (docsLink) docsLink.remove();
+
+    const moreWrap = document.createElement("div");
+    moreWrap.className = "nav-more-wrap";
+    moreWrap.innerHTML = `
+      <button class="nav-more-toggle" type="button" aria-expanded="false" aria-label="Open more menu">
+        <span>More</span>
+        <svg class="nav-more-arrow" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <div class="nav-more-menu" aria-hidden="true">
+        <a href="${docsHref}">
+          <span class="nav-more-link-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M6 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 8h8M8 12h8M8 16h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span>
+          <span>Docs</span>
+        </a>
+        <a href="index.html#staff">
+          <span class="nav-more-link-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="8.5" cy="8.5" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="15.5" cy="8.5" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.8 18.5c0-2.6 2.1-4.3 4.7-4.3s4.7 1.7 4.7 4.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10.8 18.5c0-2.6 2.1-4.3 4.7-4.3s4.7 1.7 4.7 4.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span>
+          <span>Staff Team</span>
+        </a>
+        <a href="coming-soon.html">
+          <span class="nav-more-link-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span>Contact</span>
+        </a>
+        <div class="nav-more-socials" aria-label="Social links">
+          <a class="icon-btn" href="https://www.instagram.com/bte.canada/" target="_blank" rel="noopener" aria-label="Instagram">${createNavIcon("instagram")}</a>
+          <a class="icon-btn" href="https://www.tiktok.com/@btecanada" target="_blank" rel="noopener" aria-label="TikTok">${createNavIcon("tiktok")}</a>
+        </div>
+      </div>
+    `;
+    navCenter.appendChild(moreWrap);
+
+    const toggle = moreWrap.querySelector(".nav-more-toggle");
+    const menu = moreWrap.querySelector(".nav-more-menu");
+    const closeMenu = () => {
+      moreWrap.classList.remove("is-open");
+      toggle?.setAttribute("aria-expanded", "false");
+      menu?.setAttribute("aria-hidden", "true");
+    };
+    if (toggle) {
+      toggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const isOpen = moreWrap.classList.contains("is-open");
+        if (isOpen) {
+          closeMenu();
+        } else {
+          moreWrap.classList.add("is-open");
+          toggle.setAttribute("aria-expanded", "true");
+          menu?.setAttribute("aria-hidden", "false");
+        }
+      });
+    }
+    menu?.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", closeMenu);
+    });
+    document.addEventListener("click", (event) => {
+      if (!moreWrap.contains(event.target)) closeMenu();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeMenu();
+    });
+  }
+
+  navRight.querySelector('a[aria-label="Instagram"]')?.remove();
+  navRight.querySelector('a[aria-label="TikTok"]')?.remove();
+  navRight.querySelector(".settings-wrap")?.remove();
+
+  let quick = navRight.querySelector(".nav-quick");
+  if (!quick) {
+    quick = document.createElement("div");
+    quick.className = "nav-quick";
+    const mobileToggle = navRight.querySelector("#mobileNavToggle");
+    navRight.insertBefore(quick, mobileToggle || null);
+  }
+
+  let discord = navRight.querySelector('a[aria-label="Discord"]');
+  if (!discord) {
+    discord = document.createElement("a");
+    discord.className = "icon-btn";
+    discord.href = "https://discord.gg/pnPSvpfhAs";
+    discord.target = "_blank";
+    discord.rel = "noopener";
+    discord.setAttribute("aria-label", "Discord");
+    discord.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.369a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.211.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0c-.164-.385-.397-.874-.608-1.249a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.683 4.37a.07.07 0 0 0-.032.027C.533 9.045-.32 13.58.099 18.057a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.461-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.371-.291a.074.074 0 0 1 .077-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.099.245.197.372.291a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.106c.36.699.772 1.364 1.225 1.994a.076.076 0 0 0 .084.028 19.9 19.9 0 0 0 5.994-3.03.077.077 0 0 0 .03-.056c.5-5.177-.838-9.673-3.548-13.66a.061.061 0 0 0-.031-.03z"/></svg>`;
+  }
+
+  let themeToggle = quick.querySelector("#navThemeToggle");
+  if (!themeToggle) {
+    themeToggle = document.createElement("button");
+    themeToggle.id = "navThemeToggle";
+    themeToggle.className = "icon-btn nav-theme-toggle";
+    themeToggle.type = "button";
+    themeToggle.innerHTML = createNavIcon("theme");
+    themeToggle.addEventListener("click", toggleTheme);
+  }
+
+  let authBtn = quick.querySelector("#navAuthBtn");
+  if (!authBtn) {
+    authBtn = document.createElement("button");
+    authBtn.id = "navAuthBtn";
+    authBtn.className = "icon-btn nav-auth-btn";
+    authBtn.type = "button";
+    authBtn.innerHTML = createNavIcon("login");
+  }
+
+  let avatar = quick.querySelector("#navProfileAvatar");
+  if (!avatar) {
+    avatar = document.createElement("img");
+    avatar.id = "navProfileAvatar";
+    avatar.className = "nav-profile-avatar";
+    avatar.alt = "";
+    avatar.hidden = true;
+  }
+
+  quick.append(discord, themeToggle, authBtn, avatar);
+}
+
+function setNavAuthControls(session) {
+  const authBtn = document.getElementById("navAuthBtn");
+  const avatar = document.getElementById("navProfileAvatar");
+  if (!authBtn) return;
+
+  const user = session?.user || null;
+  if (user) {
+    authBtn.innerHTML = createNavIcon("logout");
+    authBtn.setAttribute("aria-label", "Log out");
+    authBtn.setAttribute("title", "Log out");
+    authBtn.onclick = async () => {
+      const client = getSupabaseClient();
+      if (client) {
+        await client.auth.signOut();
+      } else {
+        clearSupabaseSession();
+      }
+      window.location.href = "index.html";
+    };
+
+    if (avatar) {
+      const avatarUrl = resolveDiscordAvatar(user);
+      if (avatarUrl) {
+        avatar.src = avatarUrl;
+        avatar.alt = "Discord profile picture";
+        avatar.hidden = false;
+        avatar.style.cursor = "pointer";
+        avatar.onclick = () => {
+          window.location.href = "panel.html";
+        };
+      } else {
+        avatar.hidden = true;
+        avatar.onclick = null;
+      }
+    }
+  } else {
+    authBtn.innerHTML = createNavIcon("login");
+    authBtn.setAttribute("aria-label", "Log in");
+    authBtn.setAttribute("title", "Log in");
+    authBtn.onclick = () => {
+      window.location.href = "login.html";
+    };
+    if (avatar) {
+      avatar.hidden = true;
+      avatar.onclick = null;
+    }
+  }
+}
+
+function initNavAuthControls() {
+  if (!document.getElementById("navAuthBtn")) return;
+
+  const cached = getCachedSupabaseSession();
+  setNavAuthControls(cached ? { user: cached.user } : null);
+
+  if (!window.supabase) return;
+  const client = getSupabaseClient();
+  if (!client) return;
+
+  client.auth.getSession().then(({ data }) => {
+    setNavAuthControls(data.session || null);
+  });
+
+  client.auth.onAuthStateChange((_event, session) => {
+    setNavAuthControls(session || null);
+  });
+}
+
+function initAdminLink() {
+  const adminLinks = document.querySelectorAll("#adminLink");
+  if (!adminLinks.length) return;
+  const logoutButtons = document.querySelectorAll("#logoutBtnMenu");
+
+  function setAdminLink(isAuthed) {
+    adminLinks.forEach((link) => {
+      if (isAuthed) {
+        link.textContent = "Panel";
+        link.setAttribute("href", "panel.html");
+      } else {
+        link.textContent = "Login";
+        link.setAttribute("href", "login.html");
+      }
+    });
+    logoutButtons.forEach((btn) => {
+      btn.style.display = isAuthed ? "inline-flex" : "none";
+    });
+  }
+
+  if (!window.supabase) {
+    setAdminLink(!!getCachedSupabaseSession());
+    return;
+  }
+
+  const client = getSupabaseClient();
+  if (!client) {
+    setAdminLink(!!getCachedSupabaseSession());
+    return;
+  }
+  client.auth.getSession().then(({ data }) => {
+    setAdminLink(!!data.session);
+  });
+
+  client.auth.onAuthStateChange((_event, session) => {
+    setAdminLink(!!session);
+  });
+}
+
+function initLogoutButton() {
+  const logoutButtons = document.querySelectorAll("#logoutBtnMenu");
+  if (!logoutButtons.length) return;
+
+  const client = getSupabaseClient();
+  logoutButtons.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (client) {
+        await client.auth.signOut();
+      } else {
+        clearSupabaseSession();
+      }
+      window.location.href = "login.html";
+    });
+  });
+}
+
+
+function initStatCounters() {
+  const counters = Array.from(document.querySelectorAll(".stat-number[data-count]"));
+  if (!counters.length) return;
+
+  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function setFinalValue(el) {
+    const target = Number(el.dataset.count || "0");
+    const suffix = el.dataset.suffix || "";
+    el.textContent = `${target.toLocaleString()}${suffix}`;
+  }
+
+  function animateCount(el) {
+    if (el.dataset.started === "true") return;
+    el.dataset.started = "true";
+
+    const target = Number(el.dataset.count || "0");
+    const suffix = el.dataset.suffix || "";
+    const duration = Number(el.dataset.duration || "1600");
+    const start = performance.now();
+
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+    const step = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = easeOutCubic(progress);
+      const value = Math.round(target * eased);
+      el.textContent = `${value.toLocaleString()}${suffix}`;
+      if (progress < 1) requestAnimationFrame(step);
+    };
+
+    requestAnimationFrame(step);
+  }
+
+  if (prefersReduced) {
+    counters.forEach(setFinalValue);
+    return;
+  }
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            animateCount(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.45 }
+    );
+
+    counters.forEach((el) => observer.observe(el));
+  } else {
+    counters.forEach(animateCount);
+  }
+}
+
+function initScrollReveal() {
+  const targets = document.querySelectorAll(".reveal-on-scroll");
+  if (!targets.length) return;
+
+  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReduced) {
+    targets.forEach((el) => el.classList.add("is-visible"));
+    return;
+  }
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    targets.forEach((el) => observer.observe(el));
+  } else {
+    targets.forEach((el) => el.classList.add("is-visible"));
+  }
+}
+
+function ensureNavAnnouncement() {
+  const navWraps = document.querySelectorAll(".nav-wrap");
+  navWraps.forEach((wrap) => {
+    if (wrap.querySelector(".nav-announcement")) return;
+    const bar = document.createElement("div");
+    bar.className = "nav-announcement";
+    bar.setAttribute("role", "status");
+    bar.setAttribute("aria-live", "polite");
+    wrap.appendChild(bar);
+  });
+}
+
+function setNavAnnouncement(message) {
+  const text = (message || "").trim();
+  document.querySelectorAll(".nav-announcement").forEach((bar) => {
+    const wrap = bar.closest(".nav-wrap");
+    if (!text) {
+      bar.textContent = "";
+      bar.classList.remove("show");
+      if (wrap) wrap.classList.remove("has-announcement");
+      document.body.classList.remove("announcement-active");
+      syncMapAnnouncementOffset();
+      return;
+    }
+    bar.textContent = text;
+    bar.classList.add("show");
+    if (wrap) wrap.classList.add("has-announcement");
+    document.body.classList.add("announcement-active");
+    syncMapAnnouncementOffset();
+  });
+}
+
+function syncMapAnnouncementOffset() {
+  if (!document.body.classList.contains("map-page")) return;
+  const bar = document.querySelector(".nav-announcement");
+  const isHidden = document.body.classList.contains("nav-hidden");
+  if (!bar || isHidden || !bar.classList.contains("show")) {
+    document.body.style.setProperty("--map-announce-offset", "0px");
+    return;
+  }
+  const offset = Math.max(0, bar.offsetHeight - 6);
+  document.body.style.setProperty("--map-announce-offset", `${offset}px`);
+}
+
+async function fetchAnnouncement() {
+  const client = getSupabaseClient();
+  if (client) {
+    const { data, error } = await client
+      .from("announcements")
+      .select("message")
+      .eq("id", 1)
+      .maybeSingle();
+    if (error) return "";
+    return data?.message || "";
+  }
+
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/announcements?id=eq.1&select=message`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+    if (!res.ok) return "";
+    const rows = await res.json();
+    return rows?.[0]?.message || "";
+  } catch (err) {
+    return "";
+  }
+}
+
+async function upsertAnnouncement(message) {
+  const client = getSupabaseClient();
+  if (!client) return { error: new Error("Supabase not available.") };
+  return client
+    .from("announcements")
+    .upsert({ id: 1, message }, { onConflict: "id" });
+}
+
+async function initAnnouncementBar() {
+  ensureNavAnnouncement();
+  const message = await fetchAnnouncement();
+  setNavAnnouncement(message);
+}
+
+async function fetchBuilderAreas() {
+  const client = getSupabaseClient();
+  if (client) {
+    const { data, error } = await client
+      .from("builder_areas")
+      .select("event_area,event_warp,event_image,focus_areas")
+      .eq("id", 1)
+      .maybeSingle();
+    if (error) return null;
+    return data || null;
+  }
+
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/builder_areas?id=eq.1&select=event_area,event_warp,event_image,focus_areas`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows?.[0] || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function normalizeFocusAreas(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((item) => ({
+      area: String(item?.area || "").trim(),
+      warp: String(item?.warp || "").trim(),
+      image: String(item?.image || "").trim()
+    }))
+    .filter((item) => item.area || item.warp || item.image);
+}
+
+async function initBuilderAreas() {
+  const eventTitle = document.getElementById("eventTitle");
+  const eventCommand = document.getElementById("eventCommand");
+  const eventImage = document.getElementById("eventImage");
+  const focusList = document.getElementById("focusList");
+  if (!eventTitle && !eventCommand && !eventImage && !focusList) return;
+
+  const data = await fetchBuilderAreas();
+  if (!data) return;
+
+  if (eventTitle && data.event_area) {
+    eventTitle.textContent = data.event_area;
+  }
+  if (eventCommand && data.event_warp) {
+    const code = eventCommand.querySelector("code");
+    if (code) {
+      code.textContent = data.event_warp;
+    } else {
+      eventCommand.textContent = data.event_warp;
+    }
+  }
+  if (eventImage && data.event_image) {
+    eventImage.src = data.event_image;
+    eventImage.alt = data.event_area || "Current event highlight";
+  }
+
+  const focusAreas = normalizeFocusAreas(data.focus_areas);
+  if (focusList && focusAreas.length) {
+    focusList.innerHTML = "";
+    focusAreas.forEach((item) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "panel-focus-item";
+      if (item.area) btn.setAttribute("data-area", item.area);
+      if (item.warp) btn.setAttribute("data-warp", item.warp);
+      if (item.image) btn.setAttribute("data-image", item.image);
+
+      const name = document.createElement("span");
+      name.textContent = item.area || "Focus area";
+      const warp = document.createElement("code");
+      warp.textContent = item.warp || "";
+
+      btn.appendChild(name);
+      btn.appendChild(warp);
+      focusList.appendChild(btn);
+    });
+  }
+}
+
+function getDiscordNameFromSession(session) {
+  const meta = session?.user?.user_metadata || {};
+  return meta.full_name
+    || meta.name
+    || meta.preferred_username
+    || meta.global_name
+    || meta.custom_claims?.global_name
+    || meta.username
+    || session?.user?.email
+    || "Builder";
+}
+
+function getMcAccountFromSession(session) {
+  const meta = session?.user?.user_metadata || {};
+  return meta.mc_username || meta.minecraft_username || meta.mc || "";
+}
+
+function hidePanelLoader() {
+  const loader = document.getElementById("panelLoader");
+  if (!loader) return;
+  if (loader.classList.contains("is-hidden") || loader.dataset.hiding === "1") return;
+  const startedAt = Number(loader.dataset.loaderStart || Date.now());
+  loader.dataset.loaderStart = String(startedAt);
+  loader.dataset.hiding = "1";
+
+  const elapsed = Date.now() - startedAt;
+  const remaining = Math.max(1000 - elapsed, 0);
+  window.setTimeout(() => {
+    loader.classList.add("is-hidden");
+    loader.setAttribute("aria-hidden", "true");
+  }, remaining);
+}
+
+async function initBuilderProfile() {
+  const nameEl = document.getElementById("builderWelcomeName");
+  const roleEl = document.getElementById("builderRole");
+  const mcEl = document.getElementById("builderMcAccount");
+  const gate = document.getElementById("builderGate");
+  const gateTitle = document.getElementById("builderGateTitle");
+  const gateMessage = document.getElementById("builderGateMessage");
+  const gateAction = document.getElementById("builderGateAction");
+  const gateAlt = document.getElementById("builderGateAlt");
+  try {
+    if (!nameEl && !roleEl && !mcEl) return;
+
+    const client = getSupabaseClient();
+    if (!client) return;
+
+    const { data } = await client.auth.getSession();
+    const session = data.session;
+    if (!session) return;
+
+    if (nameEl) nameEl.textContent = getDiscordNameFromSession(session);
+
+    const mc = getMcAccountFromSession(session);
+    if (mcEl && mc) {
+      mcEl.textContent = mc;
+    }
+
+    if (roleEl) {
+      roleEl.textContent = "No role";
+      try {
+        let data = null;
+        let error = null;
+        const accessToken = session?.access_token || "";
+        const fnUrl = `${SUPABASE_URL}/functions/v1/discord-guild-role`;
+
+        if (accessToken) {
+          const res = await fetch(fnUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              apikey: SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({})
+          });
+          if (res.ok) {
+            data = await res.json();
+          } else {
+            const text = await res.text();
+            error = new Error(`Function failed (${res.status}): ${text}`);
+          }
+        } else {
+          error = new Error("Missing session access token");
+        }
+
+        if (!error && data?.role) {
+          const displayRole = data.is_engineer ? `${data.role} (Engineer)` : data.role;
+          roleEl.textContent = displayRole;
+          if (!data.in_guild && Array.isArray(data.roles)) {
+            console.warn("Discord role lookup: not in guild", data);
+            if (typeof data.discord_status === "number") {
+              console.warn("Discord API status:", data.discord_status);
+            }
+          } else if (Array.isArray(data.roles) && !data.roles.length) {
+            console.warn("Discord role lookup: no roles returned", data);
+          }
+
+          if (data.in_guild === false && gate) {
+            if (gateTitle) gateTitle.textContent = "Join the Discord server";
+            if (gateMessage) gateMessage.textContent = "You must be in the BTE Canada Discord server to access the builder panel.";
+            if (gateAction) {
+              gateAction.textContent = "Join Discord";
+              gateAction.setAttribute("href", "https://discord.gg/pnPSvpfhAs");
+            }
+            if (gateAlt) gateAlt.textContent = "Back Home";
+            gate.classList.add("show");
+            gate.setAttribute("aria-hidden", "false");
+            document.body.style.overflow = "hidden";
+          } else if (String(data.role).toLowerCase() === "trial builder" && gate) {
+            if (gateTitle) gateTitle.textContent = "Complete your trial build";
+            if (gateMessage) gateMessage.textContent = "Trial builders must visit the Build page and complete the trial process before accessing the builder panel.";
+            if (gateAction) {
+              gateAction.textContent = "Go to Build page";
+              gateAction.setAttribute("href", "build.html");
+            }
+            if (gateAlt) gateAlt.textContent = "Back Home";
+            gate.classList.add("show");
+            gate.setAttribute("aria-hidden", "false");
+            document.body.style.overflow = "hidden";
+          }
+        } else if (roleEl) {
+          roleEl.textContent = "No role";
+          if (error) {
+            console.warn("Discord role lookup failed:", error.message || error);
+          }
+        }
+      } catch (_err) {
+        if (roleEl) roleEl.textContent = "No role";
+      }
+    }
+  } finally {
+    hidePanelLoader();
+  }
+}
+function initAdminAnnouncement() {
+  const input = document.getElementById("announcementInput");
+  const saveBtn = document.getElementById("announcementSave");
+  const clearBtn = document.getElementById("announcementClear");
+  const status = document.getElementById("announcementStatus");
+  if (!input || !saveBtn || !clearBtn) return;
+
+  fetchAnnouncement().then((message) => {
+    if (message) input.value = message;
+  });
+
+  saveBtn.addEventListener("click", async () => {
+    const message = input.value.trim();
+    if (status) status.textContent = "Saving...";
+    const { error } = await upsertAnnouncement(message);
+    if (error) {
+      if (status) status.textContent = `Save failed: ${error.message}`;
+      return;
+    }
+    if (status) status.textContent = "Announcement updated.";
+    setNavAnnouncement(message);
+  });
+
+  clearBtn.addEventListener("click", async () => {
+    input.value = "";
+    if (status) status.textContent = "Clearing...";
+    const { error } = await upsertAnnouncement("");
+    if (error) {
+      if (status) status.textContent = `Clear failed: ${error.message}`;
+      return;
+    }
+    if (status) status.textContent = "Announcement cleared.";
+    setNavAnnouncement("");
+  });
+}
+
+function resolveDiscordAvatar(user) {
+  const meta = user?.user_metadata || {};
+  const avatarUrl = meta.avatar_url || meta.picture;
+  if (avatarUrl) return avatarUrl;
+  const discordId = meta.provider_id || meta.sub;
+  const avatarHash = meta.avatar;
+  if (discordId && avatarHash) {
+    return `https://cdn.discordapp.com/avatars/${discordId}/${avatarHash}.png?size=128`;
+  }
+  return "";
+}
+
+function resolveDisplayName(user) {
+  const meta = user?.user_metadata || {};
+  return meta.full_name
+    || meta.name
+    || meta.preferred_username
+    || user?.email
+    || "Builder";
+}
+
+function setSettingsProfile(user) {
+  const profile = document.getElementById("settingsProfile");
+  if (!profile) return;
+  if (!user) {
+    profile.style.display = "none";
+    return;
+  }
+  const avatarUrl = resolveDiscordAvatar(user);
+  const name = resolveDisplayName(user);
+  const avatarEl = document.getElementById("settingsAvatar");
+  const nameEl = document.getElementById("settingsName");
+
+  if (avatarEl && avatarUrl) {
+    avatarEl.src = avatarUrl;
+    avatarEl.alt = `${name} avatar`;
+  }
+  if (nameEl) {
+    nameEl.textContent = name;
+  }
+  if (avatarUrl || name) {
+    profile.style.display = "grid";
+  }
+}
+
+function initSettingsProfile() {
+  const profile = document.getElementById("settingsProfile");
+  if (!profile) return;
+
+  const cached = getCachedSupabaseSession();
+  if (cached?.user) {
+    setSettingsProfile(cached.user);
+  }
+
+  if (!window.supabase) return;
+  const client = getSupabaseClient();
+  if (!client) return;
+
+  client.auth.getSession().then(({ data }) => {
+    setSettingsProfile(data.session?.user || null);
+  });
+
+  client.auth.onAuthStateChange((_event, session) => {
+    setSettingsProfile(session?.user || null);
+  });
+}
+
+function getCachedSupabaseSession() {
+  try {
+    const ref = (SUPABASE_URL || "").replace("https://", "").split(".")[0];
+    const key = `sb-${ref}-auth-token`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (data?.expires_at && Date.now() / 1000 > data.expires_at) return null;
+    return data;
+  } catch (err) {
+    return null;
+  }
+}
+
+function clearSupabaseSession() {
+  try {
+    const ref = (SUPABASE_URL || "").replace("https://", "").split(".")[0];
+    const key = `sb-${ref}-auth-token`;
+    localStorage.removeItem(key);
+  } catch (err) {
+    return;
+  }
+}
+
+function toggleMapNav() {
+  const body = document.body;
+  if (!body || !body.classList.contains("map-page")) return;
+
+  const btn = document.querySelector(".map-nav-toggle");
+  const isHidden = body.classList.toggle("nav-hidden");
+
+  if (btn) {
+    btn.setAttribute("aria-pressed", isHidden ? "true" : "false");
+    btn.setAttribute("aria-label", isHidden ? "Show navigation" : "Hide navigation");
+    btn.setAttribute("title", isHidden ? "Show navigation" : "Hide navigation");
+  }
+  syncMapAnnouncementOffset();
+}
+
+// -------------------------------
+// SHOWCASE PAGE: grid + fullscreen lightbox (works with your HTML)
+// Requires: <div id="shotGrid"></div> and your lightbox IDs
+// Data: Supabase table `screenshots` with image_path, place, prov, builders
+// -------------------------------
+
+let SHOTS = [];
+let CURRENT = 0;
+let LIGHTBOX_ZOOM = 1;
+const LIGHTBOX_ZOOM_MIN = 1;
+const LIGHTBOX_ZOOM_MAX = 3;
+const LIGHTBOX_ZOOM_STEP = 0.15;
+
+const SUPABASE_URL = "https://ggrszibzbsvqrsowuctg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncnN6aWJ6YnN2cXJzb3d1Y3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMjY4ODEsImV4cCI6MjA4NTkwMjg4MX0.GKsex6OlVv9Wtzkr4c1DmhpHsv_8l2I-6l0mmDtl0qc";
+const SUPABASE_TABLE = "screenshots";
+const SUPABASE_BUCKET = "screenshots";
+
+window.APP_SUPABASE = {
+  url: SUPABASE_URL,
+  key: SUPABASE_ANON_KEY
+};
+
+function getSupabaseClient() {
+  if (!window.supabase) return null;
+  if (!window.APP_SUPABASE_CLIENT) {
+    window.APP_SUPABASE_CLIENT = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  return window.APP_SUPABASE_CLIENT;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initUnifiedNavbar();
+  initNavAuthControls();
+  initMobileNavDrawer();
+  initHomeHeroNavGlass();
+  initHeroLearnMoreLink();
+  initHeroTitleFit();
+  initServerVersionDisplays();
+  initShowcaseGrid();
+  initHomeRandomSectionImages();
+  initStaffGrid();
+  initDocsGate();
+  initLightboxZoom();
+  initSettingsMenu();
+  initAnnouncementBar();
+  initAdminAnnouncement();
+  initBuilderAreas();
+  initBuilderProfile();
+  initSettingsProfile();
+  initAdminLink();
+  initLogoutButton();
+  initAutoRevealForContentPages();
+  initStatCounters();
+  initScrollReveal();
+});
+
+function initServerVersionDisplays() {
+  const homeVersionEl = document.getElementById("homeServerVersion");
+  if (!homeVersionEl) return;
+
+  const host = "btecanada.net";
+  const port = 25565;
+  const apiUrl = `https://api.mcsrvstat.us/2/${host}`;
+  const fallbackUrl = `https://api.mcstatus.io/v2/status/java/${host}:${port}`;
+
+  const setHomeVersion = (version) => {
+    homeVersionEl.textContent = version || "loading..";
+  };
+
+  fetch(apiUrl)
+    .then((res) => res.json())
+    .then((data) => {
+      if (data && data.online) {
+        setHomeVersion(data.version || "loading..");
+        return;
+      }
+
+      return fetch(fallbackUrl)
+        .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+        .then((alt) => {
+          if (alt && alt.online) {
+            const version = alt.version?.name_clean || alt.version?.name_raw || alt.version?.name || "loading..";
+            setHomeVersion(version);
+            return;
+          }
+
+          setHomeVersion("loading..");
+        })
+        .catch(() => {
+          setHomeVersion("loading..");
+        });
+    })
+    .catch(() => {
+      setHomeVersion("loading..");
+    });
+}
+
+function initHeroLearnMoreLink() {
+  const learnMoreBtn = document.querySelector(".hero-scroll--label");
+  const aboutSection = document.getElementById("about");
+  if (!learnMoreBtn || !aboutSection) return;
+
+  learnMoreBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    aboutSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function initHeroTitleFit() {
+  const heroTitle = document.querySelector(".hero-title");
+  if (!heroTitle) return;
+
+  const heading = heroTitle.closest("h1");
+  if (!heading || heading.dataset.heroFitInit === "1") return;
+  heading.dataset.heroFitInit = "1";
+
+  const minFontSizePx = 14;
+  let rafId = 0;
+
+  const fitHeroTitle = () => {
+    rafId = 0;
+    heading.style.fontSize = "";
+
+    const maxFontSizePx = parseFloat(getComputedStyle(heading).fontSize) || 0;
+    const availableWidth = heading.clientWidth;
+    const titleWidth = heroTitle.scrollWidth;
+    if (!maxFontSizePx || !availableWidth || !titleWidth || titleWidth <= availableWidth) return;
+
+    const fittedSize = Math.max(minFontSizePx, Math.floor(maxFontSizePx * (availableWidth / titleWidth)));
+    heading.style.fontSize = `${fittedSize}px`;
+  };
+
+  const queueFit = () => {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(fitHeroTitle);
+  };
+
+  queueFit();
+  window.addEventListener("resize", queueFit, { passive: true });
+
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(queueFit);
+    observer.observe(heading);
+    observer.observe(heroTitle);
+  }
+}
+
+function initHomeHeroNavGlass() {
+  const navWrap = document.querySelector(".nav-wrap");
+  const hero = document.querySelector(".hero");
+  if (!navWrap || !hero) return;
+
+  const updateNavState = () => {
+    const navHeight = navWrap.offsetHeight || 0;
+    document.documentElement.style.setProperty("--home-nav-offset", `${navHeight}px`);
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const heroFadeDistance = Math.max(140, (hero.offsetHeight || 0) - navHeight);
+    const rawProgress = 1 - (scrollY / heroFadeDistance);
+    const progress = Math.max(0, Math.min(1, rawProgress));
+    navWrap.style.setProperty("--nav-hero-progress", progress.toFixed(3));
+    navWrap.classList.toggle("nav-over-hero", progress > 0.01);
+  };
+
+  updateNavState();
+  window.addEventListener("scroll", updateNavState, { passive: true });
+  window.addEventListener("resize", updateNavState);
+
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(updateNavState);
+    observer.observe(navWrap);
+    observer.observe(hero);
+  }
+}
+
+function initAutoRevealForContentPages() {
+  const selectors = [];
+
+  if (document.querySelector(".showcase-page")) {
+    selectors.push(".showcase-page > *");
+  }
+
+  if (document.querySelector(".visit-page")) {
+    selectors.push(
+      ".visit-page > *",
+      ".visit-grid > *",
+      ".visit-details > *",
+      ".visit-list li"
+    );
+  }
+
+  if (document.querySelector(".builder-page")) {
+    selectors.push(
+      ".builder-page > *",
+      ".builder-grid > *",
+      ".builder-card > *",
+      ".steps li",
+      ".team-list li"
+    );
+  }
+
+  if (!selectors.length) return;
+
+  document.querySelectorAll(selectors.join(",")).forEach((el) => {
+    if (!el.classList.contains("reveal-on-scroll")) {
+      el.classList.add("reveal-on-scroll");
+    }
+  });
+}
+
+async function initHomeRandomSectionImages() {
+  const aboutImg = document.getElementById("aboutRandomImage");
+  const buildImg = document.getElementById("buildRandomImage");
+  const aboutCaption = document.getElementById("aboutRandomCaption");
+  const buildCaption = document.getElementById("buildRandomCaption");
+  if (!aboutImg && !buildImg && !aboutCaption && !buildCaption) return;
+
+  try {
+    const shots = await loadShots();
+    const entries = (Array.isArray(shots) ? shots : []).filter((shot) => String(shot?.file || "").trim());
+
+    if (!entries.length) return;
+    const picks = shuffleArray(entries).slice(0, Math.min(2, entries.length));
+    const first = picks[0] || null;
+    const second = picks[1] || first;
+
+    if (aboutImg && first?.file) aboutImg.src = first.file;
+    if (buildImg && second?.file) buildImg.src = second.file;
+    if (aboutCaption) aboutCaption.textContent = formatShotCaption(first);
+    if (buildCaption) buildCaption.textContent = formatShotCaption(second);
+  } catch (err) {
+    console.warn("Random home images unavailable", err);
+  }
+}
+
+function formatShotCaption(shot) {
+  const place = String(shot?.place || "").trim();
+  const prov = String(shot?.prov || "").trim();
+  if (place && prov) return `${place}, ${prov}`;
+  if (place) return place;
+  if (prov) return prov;
+  return "Random screenshot from our showcase";
+}
+
+async function fetchStaffMembers() {
+  const client = getSupabaseClient();
+  if (client) {
+    const { data, error } = await client
+      .from("staff_members")
+      .select("mc_username,discord_id,discord_username,official_title,role,show_on_front,avatar_url")
+      .eq("show_on_front", true)
+      .order("mc_username", { ascending: true });
+    if (error) return [];
+    return data || [];
+  }
+
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/staff_members?select=mc_username,discord_id,discord_username,official_title,role,show_on_front,avatar_url&show_on_front=eq.true`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (err) {
+    return [];
+  }
+}
+
+function getDiscordFallbackAvatar(discordId) {
+  const idNum = Number(discordId);
+  if (!Number.isFinite(idNum)) return "https://cdn.discordapp.com/embed/avatars/0.png";
+  const index = Math.abs(idNum) % 6;
+  return `https://cdn.discordapp.com/embed/avatars/${index}.png`;
+}
+
+async function initStaffGrid() {
+  const carousel = document.getElementById("staffCarousel");
+  if (!carousel) return;
+
+  const rows = await fetchStaffMembers();
+  if (!rows.length) {
+    carousel.innerHTML = `<p class="section-text">No staff listed yet.</p>`;
+    return;
+  }
+
+  const roleRank = {
+    admin: 3,
+    developer: 2,
+    staff: 1,
+    none: 0
+  };
+  rows.sort((a, b) => {
+    const rankA = roleRank[(a.role || "none").toLowerCase()] ?? 0;
+    const rankB = roleRank[(b.role || "none").toLowerCase()] ?? 0;
+    if (rankA !== rankB) return rankB - rankA;
+    return (a.mc_username || "").localeCompare(b.mc_username || "");
+  });
+
+  carousel.innerHTML = "";
+  rows.forEach((row) => {
+    const card = document.createElement("div");
+    card.className = "staff-card";
+    const avatar = row.avatar_url || getDiscordFallbackAvatar(row.discord_id);
+    const handle = row.discord_username || row.discord_id || "";
+    const title = row.official_title || row.role || "Staff";
+    card.innerHTML = `
+      <img src="${avatar}" alt="${escapeHtml(row.mc_username || "Staff")}" />
+      <h4>${escapeHtml(row.mc_username || "Staff")}</h4>
+      <p class="staff-discord"><code>${escapeHtml(handle)}</code></p>
+      <p>${escapeHtml(title)}</p>
+    `;
+    carousel.appendChild(card);
+  });
+}
+
+async function initShowcaseGrid() {
+  const grid = document.getElementById("shotGrid");
+  if (!grid) return; // not on showcase.html
+
+  try {
+    SHOTS = await loadShots();
+
+    if (!SHOTS.length) {
+      grid.innerHTML = `<p style="color:var(--muted);">No screenshots found.</p>`;
+      return;
+    }
+
+    grid.innerHTML = "";
+    SHOTS.forEach((s, i) => {
+      const card = document.createElement("div");
+      card.className = "shot-card reveal-on-scroll";
+      card.style.cursor = "zoom-in";
+
+      const prov = escapeHtml(s.prov || "");
+      const builders = (s.builders || []).map(escapeHtml).join(", ");
+      card.innerHTML = `
+        <img src="${s.file}" alt="${escapeHtml(s.place || "Screenshot")}" loading="lazy" />
+        <div class="shot-card-body">
+          <div class="shot-title">
+            <p class="shot-place">${escapeHtml(s.place || "Unknown Location")}</p>
+            ${prov ? `<span class="shot-pill">${prov}</span>` : ""}
+          </div>
+          ${builders ? `<p class="shot-builders">Builders: <code>${builders}</code></p>` : ""}
+        </div>
+      `;
+
+      card.addEventListener("click", () => openLightbox(i));
+      grid.appendChild(card);
+    });
+    initScrollReveal();
+  } catch (err) {
+    console.error(err);
+    grid.innerHTML = `<p style="color:var(--muted);">Couldn’t load screenshots.</p>`;
+  }
+}
+
+async function loadShots() {
+  try {
+    return await fetchShotsFromSupabase();
+  } catch (err) {
+    console.warn("Supabase fetch failed, falling back to screenshots.json", err);
+    const res = await fetch("screenshots.json", { cache: "no-store" });
+    if (!res.ok) throw new Error("screenshots.json not found");
+    const data = await res.json();
+    return normalizeShotData(data, false);
+  }
+}
+
+async function fetchShotsFromSupabase() {
+  const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=image_path,place,prov,builders&order=created_at.desc`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+    }
+  });
+  if (!res.ok) throw new Error("Supabase fetch failed");
+  const data = await res.json();
+  return normalizeShotData(data, true);
+}
+
+function normalizeShotData(data, fromSupabase) {
+  return (Array.isArray(data) ? data : [])
+    .map(s => {
+      const imagePath = String(fromSupabase ? s.image_path : s.file || "").trim();
+      const file = imagePath
+        ? (imagePath.startsWith("http://") || imagePath.startsWith("https://"))
+          ? imagePath
+          : `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${imagePath}`
+        : "";
+      return {
+        file,
+        place: String(s.place || "").trim(),
+        prov: String(s.prov || "").trim(),
+        builders: Array.isArray(s.builders)
+          ? s.builders.map(b => String(b || "").trim()).filter(Boolean)
+          : []
+      };
+    })
+    .filter(s => s.file);
+}
+
+function openLightbox(index) {
+  const box = document.getElementById("lightbox");
+  const img = document.getElementById("lightboxImg");
+  const cap = document.getElementById("lightboxCaption");
+  const frame = document.querySelector(".lightbox-frame");
+
+  if (!box || !img || !cap) {
+    console.error("Lightbox elements missing from HTML");
+    return;
+  }
+
+  CURRENT = index;
+
+  const s = SHOTS[CURRENT];
+  img.src = s.file;
+  img.alt = s.place || "Screenshot";
+  cap.textContent = `${s.place || ""} (scroll to zoom)`;
+  resetLightboxZoom();
+  if (frame) {
+    frame.classList.remove("swap");
+    void frame.offsetWidth;
+    frame.classList.add("swap");
+  }
+
+  box.classList.add("open");
+  document.documentElement.classList.add("lightbox-open");
+  box.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeLightbox() {
+  const box = document.getElementById("lightbox");
+  const img = document.getElementById("lightboxImg");
+
+  if (!box) return;
+
+  box.classList.remove("open");
+  document.documentElement.classList.remove("lightbox-open");
+  box.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+
+  if (img) {
+    img.src = "";
+    resetLightboxZoom();
+  }
+}
+
+// ESC to close
+document.addEventListener("keydown", (e) => {
+  const box = document.getElementById("lightbox");
+  if (!box || !box.classList.contains("open")) return;
+  if (e.key === "Escape") closeLightbox();
+  if (e.key === "ArrowLeft") lightboxPrev();
+  if (e.key === "ArrowRight") lightboxNext();
+});
+
+function initLightboxZoom() {
+  const box = document.getElementById("lightbox");
+  const img = document.getElementById("lightboxImg");
+  if (!box || !img) return;
+
+  img.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (LIGHTBOX_ZOOM <= 1) {
+      setLightboxZoom(1.6);
+      img.classList.add("zoomed");
+    } else {
+      resetLightboxZoom();
+    }
+  });
+
+  img.addEventListener("mousemove", (e) => {
+    if (LIGHTBOX_ZOOM <= 1) return;
+    const rect = img.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    img.style.setProperty("--zoom-x", `${x}%`);
+    img.style.setProperty("--zoom-y", `${y}%`);
+  });
+
+  img.addEventListener("mouseleave", () => {
+    if (LIGHTBOX_ZOOM <= 1) return;
+    img.style.setProperty("--zoom-x", "50%");
+    img.style.setProperty("--zoom-y", "50%");
+  });
+
+  box.addEventListener(
+    "wheel",
+    (e) => {
+      if (!box.classList.contains("open")) return;
+      e.preventDefault();
+      const dir = e.deltaY > 0 ? -1 : 1;
+      const nextZoom = LIGHTBOX_ZOOM + dir * LIGHTBOX_ZOOM_STEP;
+      setLightboxZoom(nextZoom);
+    },
+    { passive: false }
+  );
+}
+
+function setLightboxZoom(value) {
+  const img = document.getElementById("lightboxImg");
+  if (!img) return;
+  LIGHTBOX_ZOOM = Math.min(LIGHTBOX_ZOOM_MAX, Math.max(LIGHTBOX_ZOOM_MIN, value));
+  img.style.setProperty("--zoom", LIGHTBOX_ZOOM.toFixed(2));
+  if (LIGHTBOX_ZOOM > 1) {
+    img.classList.add("zoomed");
+  } else {
+    img.classList.remove("zoomed");
+    img.style.setProperty("--zoom-x", "50%");
+    img.style.setProperty("--zoom-y", "50%");
+  }
+}
+
+function resetLightboxZoom() {
+  const img = document.getElementById("lightboxImg");
+  if (!img) return;
+  LIGHTBOX_ZOOM = 1;
+  img.classList.remove("zoomed");
+  img.style.removeProperty("--zoom");
+  img.style.setProperty("--zoom-x", "50%");
+  img.style.setProperty("--zoom-y", "50%");
+}
+
+function lightboxPrev() {
+  if (!SHOTS.length) return;
+  CURRENT = (CURRENT - 1 + SHOTS.length) % SHOTS.length;
+  openLightbox(CURRENT);
+}
+
+function lightboxNext() {
+  if (!SHOTS.length) return;
+  CURRENT = (CURRENT + 1) % SHOTS.length;
+  openLightbox(CURRENT);
+}
+
+// helper
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// -------------------------------
+// DOCS PAGE: lightweight gate (client-side only)
+// -------------------------------
+
+function initDocsGate() {
+  const gate = document.querySelector(".docs-gate");
+  if (!gate) return;
+
+  const form = gate.querySelector("form");
+  const input = gate.querySelector("input[type=\"password\"]");
+  const error = gate.querySelector(".docs-error");
+  const content = document.querySelector(".docs-content");
+  const unlockKey = "docsUnlocked";
+  const password = gate.getAttribute("data-password") || "";
+
+  if (localStorage.getItem(unlockKey) === "true") {
+    gate.hidden = true;
+    if (content) content.hidden = false;
+    return;
+  }
+
+  if (!form || !input) return;
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const value = input.value.trim();
+    if (value && value === password) {
+      localStorage.setItem(unlockKey, "true");
+      gate.hidden = true;
+      if (content) content.hidden = false;
+    } else if (error) {
+      error.textContent = "Incorrect password. Please try again.";
+    }
+  });
+}
+
+// -------------------------------
+// HOME PAGE CAROUSEL (uses screenshots.json)
+// -------------------------------
+
+let carouselShots = [];
+let carouselIndex = 0;
+let carouselTimer = null;
+
+async function initShotCarousel() {
+  const track = document.getElementById("shotTrack");
+  const dotsWrap = document.getElementById("shotDots");
+  if (!track || !dotsWrap) return; // not on home page
+
+  // Reuse the same loader if it exists, otherwise fetch directly
+  const shots = (typeof loadShots === "function")
+    ? await loadShots()
+    : await (await fetch("screenshots.json", { cache: "no-store" })).json();
+
+  if (!Array.isArray(shots) || shots.length === 0) {
+    track.innerHTML = `<div style="padding:2rem;color:var(--muted);">No screenshots found.</div>`;
+    return;
+  }
+
+  // pick random up to 6
+  carouselShots = shuffleArray(shots).slice(0, Math.min(6, shots.length));
+  carouselIndex = 0;
+
+  track.innerHTML = "";
+  dotsWrap.innerHTML = "";
+
+  carouselShots.forEach((s, i) => {
+    const slide = document.createElement("div");
+    slide.className = "shot-slide";
+    slide.style.backgroundImage = `url("${s.file}")`;
+
+    const prov = escapeHtml(s.prov || "");
+    const builders = (s.builders || []).map(escapeHtml).join(", ");
+    slide.innerHTML = `
+      <div class="shot-overlay"></div>
+      <div class="shot-caption">
+        <div class="shot-title">
+          <h3>${escapeHtml(s.place || "Unknown Location")}</h3>
+          ${prov ? `<span class="shot-pill">${prov}</span>` : ""}
+        </div>
+        ${builders ? `<p class="shot-builders">Builders: <code>${builders}</code></p>` : ""}
+      </div>
+    `;
+
+    track.appendChild(slide);
+
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "shot-dot" + (i === 0 ? " active" : "");
+    dot.setAttribute("aria-label", `Go to slide ${i + 1}`);
+    dot.addEventListener("click", () => goToShot(i));
+    dotsWrap.appendChild(dot);
+  });
+
+  updateCarouselUI();
+  startCarouselAuto();
+}
+
+function shotPrev() {
+  if (!carouselShots.length) return;
+  carouselIndex = (carouselIndex - 1 + carouselShots.length) % carouselShots.length;
+  updateCarouselUI();
+  startCarouselAuto();
+}
+
+function shotNext() {
+  if (!carouselShots.length) return;
+  carouselIndex = (carouselIndex + 1) % carouselShots.length;
+  updateCarouselUI();
+  startCarouselAuto();
+}
+
+function goToShot(i) {
+  carouselIndex = i;
+  updateCarouselUI();
+  startCarouselAuto();
+}
+
+function updateCarouselUI() {
+  const track = document.getElementById("shotTrack");
+  if (!track) return;
+
+  track.style.transform = `translateX(-${carouselIndex * 100}%)`;
+
+  const dots = document.querySelectorAll("#shotDots .shot-dot");
+  dots.forEach((d, idx) => d.classList.toggle("active", idx === carouselIndex));
+}
+
+function startCarouselAuto() {
+  if (carouselTimer) clearInterval(carouselTimer);
+  if (carouselShots.length <= 1) return;
+
+  carouselTimer = setInterval(() => {
+    shotNext();
+  }, 4500);
+}
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Init on page load (only runs if elements exist)
+document.addEventListener("DOMContentLoaded", () => {
+  initShotCarousel();
+});
